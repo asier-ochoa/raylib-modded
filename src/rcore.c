@@ -2201,6 +2201,31 @@ void BeginMode3D(Camera3D camera)
     rlEnableDepthTest();            // Enable DEPTH_TEST for 3D
 }
 
+void MatBeginMode3D(Matrix matView, float fovy)
+{
+    rlDrawRenderBatchActive();      // Update and draw internal render batch
+
+    rlMatrixMode(RL_PROJECTION);    // Switch to projection matrix
+    rlPushMatrix();                 // Save previous matrix, which contains the settings for the 2d ortho projection
+    rlLoadIdentity();               // Reset current matrix (projection)
+
+    float aspect = (float)CORE.Window.currentFbo.width/(float)CORE.Window.currentFbo.height;
+
+    // NOTE: zNear and zFar values are important when computing depth buffer values
+    // Setup perspective projection
+    double top = RL_CULL_DISTANCE_NEAR*tan(fovy*0.5*DEG2RAD);
+    double right = top*aspect;
+
+    rlFrustum(-right, right, -top, top, RL_CULL_DISTANCE_NEAR, RL_CULL_DISTANCE_FAR);
+
+    rlMatrixMode(RL_MODELVIEW);     // Switch back to modelview matrix
+    rlLoadIdentity();               // Reset current matrix (modelview)
+
+    rlMultMatrixf(MatrixToFloat(matView));      // Multiply modelview matrix by view matrix (camera)
+
+    rlEnableDepthTest();            // Enable DEPTH_TEST for 3D
+}
+
 // Ends 3D mode and returns to default 2D orthographic mode
 void EndMode3D(void)
 {
